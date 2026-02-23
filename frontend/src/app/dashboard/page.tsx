@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'analytics' | 'settings'>('new');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -85,11 +85,25 @@ export default function DashboardPage() {
             <Clock className="w-5 h-5" />
             Build History
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 transition">
+          <button 
+            onClick={() => setActiveTab('analytics')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+              activeTab === 'analytics'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                : 'text-gray-400 hover:bg-white/5'
+            }`}
+          >
             <BarChart3 className="w-5 h-5" />
             Analytics
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 transition">
+          <button 
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                : 'text-gray-400 hover:bg-white/5'
+            }`}
+          >
             <Settings className="w-5 h-5" />
             Settings
           </button>
@@ -153,7 +167,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Content */}
-        {activeTab === 'new' ? <NewBuildForm /> : <BuildHistory builds={builds} loading={buildsLoading} />}
+        {activeTab === 'new' && <NewBuildForm />}
+        {activeTab === 'history' && <BuildHistory builds={builds} loading={buildsLoading} />}
+        {activeTab === 'analytics' && <Analytics stats={stats} />}
+        {activeTab === 'settings' && <SettingsPanel user={user} />}
       </main>
     </div>
   );
@@ -433,5 +450,127 @@ function StatusBadge({ status }: { status: string }) {
       <config.icon className="w-4 h-4" />
       <span className="text-sm font-medium">{config.label}</span>
     </div>
+  );
+}
+
+function Analytics({ stats }: { stats: any }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <h2 className="text-3xl font-bold text-white mb-8">Analytics</h2>
+      
+      <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="card">
+          <h3 className="text-lg font-semibold text-white mb-4">Usage Statistics</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Total Builds</span>
+              <span className="text-white font-semibold">{stats?.usage.totalBuilds || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Completed</span>
+              <span className="text-green-400 font-semibold">{stats?.usage.completedBuilds || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Failed</span>
+              <span className="text-red-400 font-semibold">{stats?.usage.failedBuilds || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Total Downloads</span>
+              <span className="text-purple-400 font-semibold">{stats?.usage.totalDownloads || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 className="text-lg font-semibold text-white mb-4">Plan Limits</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Plan</span>
+              <span className="text-white font-semibold capitalize">{stats?.limits.plan || 'Free'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Builds This Month</span>
+              <span className="text-white font-semibold">{stats?.usage.buildsThisMonth} / {stats?.limits.maxBuildsPerMonth}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Storage Used</span>
+              <span className="text-white font-semibold">{stats?.usage.storageUsed || '0 MB'} / {stats?.limits.maxStorageMB} MB</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-2 mt-4">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                style={{ width: `${(stats?.usage.buildsThisMonth / stats?.limits.maxBuildsPerMonth * 100) || 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+        <p className="text-gray-400">Build history and activity logs coming soon...</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function SettingsPanel({ user }: { user: any }) {
+  const router = useRouter();
+  
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <h2 className="text-3xl font-bold text-white mb-8">Settings</h2>
+      
+      <div className="space-y-6">
+        <div className="card">
+          <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-gray-400">Email</label>
+              <p className="text-white">{user.email}</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-400">Plan</label>
+              <p className="text-white capitalize">{user.subscription?.plan || 'Free'}</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-400">Member Since</label>
+              <p className="text-white">{new Date(user.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 className="text-lg font-semibold text-white mb-4">Subscription</h3>
+          {user.subscription?.plan === 'free' ? (
+            <div>
+              <p className="text-gray-400 mb-4">Upgrade to Pro for unlimited builds and features!</p>
+              <button 
+                onClick={() => router.push('/pricing')}
+                className="btn-primary"
+              >
+                <CreditCard className="w-5 h-5 inline mr-2" />
+                Upgrade to Pro
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-gray-400 mb-2">You're on the Pro plan</p>
+              <p className="text-sm text-gray-500">Next billing date: {user.subscription?.currentPeriodEnd ? new Date(user.subscription.currentPeriodEnd).toLocaleDateString() : 'N/A'}</p>
+              <button className="mt-4 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+                Cancel Subscription
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="text-lg font-semibold text-white mb-4">Danger Zone</h3>
+          <button className="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 }
