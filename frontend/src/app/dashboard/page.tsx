@@ -48,8 +48,8 @@ export default function DashboardPage() {
       return res.data.builds;
     },
     enabled: !!user,
-    refetchInterval: (data) => {
-      const hasActiveBuilds = data?.data?.builds?.some((b: any) => 
+    refetchInterval: (query) => {
+      const hasActiveBuilds = query.state.data?.some((b: any) => 
         b.status === 'building' || b.status === 'queued'
       );
       return hasActiveBuilds ? 3000 : false;
