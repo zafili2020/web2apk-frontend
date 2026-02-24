@@ -213,13 +213,13 @@ function NavButton({ icon: Icon, label, active, onClick, badge }: any) {
 }
 
 function StatCard({ icon: Icon, label, value, color, onClick, clickable, hint }: any) {
-  const colors = {
+  const colors: Record<string, string> = {
     purple: 'from-purple-500/20 to-purple-600/20 border-purple-500/30',
     green: 'from-green-500/20 to-green-600/20 border-green-500/30',
     blue: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
     pink: 'from-pink-500/20 to-pink-600/20 border-pink-500/30',
   };
-  const iconColors = {
+  const iconColors: Record<string, string> = {
     purple: 'text-purple-400',
     green: 'text-green-400',
     blue: 'text-blue-400',
@@ -227,9 +227,9 @@ function StatCard({ icon: Icon, label, value, color, onClick, clickable, hint }:
   };
 
   return (
-    <motion.div whileHover={clickable ? { scale: 1.02, y: -2 } : {}} onClick={clickable ? onClick : undefined} className={`card bg-gradient-to-br ${colors[color]} border ${clickable ? 'cursor-pointer' : ''} group relative`} title={hint}>
+    <motion.div whileHover={clickable ? { scale: 1.02, y: -2 } : {}} onClick={clickable ? onClick : undefined} className={`card bg-gradient-to-br ${colors[color] || colors.purple} border ${clickable ? 'cursor-pointer' : ''} group relative`} title={hint}>
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-white/10 ${iconColors[color]}`}>
+        <div className={`p-3 rounded-xl bg-white/10 ${iconColors[color] || iconColors.purple}`}>
           <Icon className="w-6 h-6" />
         </div>
         {clickable && <div className="opacity-0 group-hover:opacity-100 transition text-gray-400 text-xs">Click</div>}
