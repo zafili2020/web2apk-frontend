@@ -7,7 +7,8 @@ import {
   Smartphone, Plus, Download, Trash2, Clock, CheckCircle2, 
   XCircle, Loader2, Settings, LogOut, CreditCard, BarChart3,
   Globe, Image, Palette, Zap, Upload, Menu, X, HelpCircle,
-  Package, TrendingUp, Users, Activity, FileText, Mail, ExternalLink
+  Package, TrendingUp, Users, Activity, FileText, Mail, ExternalLink,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'new' | 'apps' | 'analytics' | 'history' | 'settings' | 'support'>('new');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeBuild, setActiveBuild] = useState<any>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -86,57 +87,80 @@ export default function DashboardPage() {
             </Link>
           </div>
           
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Center Navigation */}
+          <nav className="hidden md:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
             <Link href="/" className="text-gray-300 hover:text-white transition">Home</Link>
             <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
             <Link href="/#features" className="text-gray-300 hover:text-white transition">Features</Link>
             <Link href="/#contact" className="text-gray-300 hover:text-white transition">Contact</Link>
           </nav>
+
+          {/* Right Side - Logout */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
         </div>
       </header>
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-16 bottom-0 w-64 glass border-r border-white/10 p-6 transition-transform z-30 overflow-y-auto ${
+      <aside className={`fixed left-0 top-16 bottom-0 ${sidebarCollapsed ? 'w-20' : 'w-64'} glass border-r border-white/10 p-6 transition-all duration-300 z-30 overflow-y-auto ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="hidden lg:flex absolute -right-3 top-6 w-6 h-6 rounded-full bg-purple-500 items-center justify-center text-white hover:bg-purple-600 transition"
+        >
+          {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+
         <nav className="space-y-2 mb-auto">
-          <NavButton icon={Plus} label="New Build" active={activeTab === 'new'} onClick={() => setActiveTab('new')} />
-          <NavButton icon={Package} label="Apps List" active={activeTab === 'apps'} onClick={() => setActiveTab('apps')} badge={completedBuilds.length} />
-          <NavButton icon={BarChart3} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
-          <NavButton icon={Clock} label="Build History" active={activeTab === 'history'} onClick={() => setActiveTab('history')} badge={builds?.length} />
-          <NavButton icon={Settings} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-          <NavButton icon={HelpCircle} label="Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
+          <NavButton icon={Plus} label="New Build" active={activeTab === 'new'} onClick={() => setActiveTab('new')} collapsed={sidebarCollapsed} />
+          <NavButton icon={Package} label="Apps List" active={activeTab === 'apps'} onClick={() => setActiveTab('apps')} badge={completedBuilds.length} collapsed={sidebarCollapsed} />
+          <NavButton icon={BarChart3} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} collapsed={sidebarCollapsed} />
+          <NavButton icon={Clock} label="Build History" active={activeTab === 'history'} onClick={() => setActiveTab('history')} badge={builds?.length} collapsed={sidebarCollapsed} />
+          <NavButton icon={Settings} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} collapsed={sidebarCollapsed} />
+          <NavButton icon={HelpCircle} label="Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} collapsed={sidebarCollapsed} />
         </nav>
 
-        <div className="absolute bottom-6 left-6 right-6 space-y-4">
-          <div className="card p-4">
-            <div className="flex items-center gap-3 mb-3">
+        <div className="absolute bottom-6 left-6 right-6">
+          {!sidebarCollapsed && (
+            <div className="card p-4 mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  {user.email?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-white truncate text-sm">{user.email?.split('@')[0] || 'User'}</div>
+                  <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                </div>
+              </div>
+              {(!user.subscription || user.subscription?.plan === 'free') && (
+                <Link 
+                  href="/pricing"
+                  className="block w-full px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium text-center hover:opacity-90 transition"
+                >
+                  Upgrade to Pro
+                </Link>
+              )}
+            </div>
+          )}
+          {sidebarCollapsed && (
+            <div className="flex justify-center">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
                 {user.email?.[0]?.toUpperCase() || 'U'}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-white truncate text-sm">{user.email?.split('@')[0] || 'User'}</div>
-                <div className="text-xs text-gray-400 truncate">{user.email}</div>
-              </div>
             </div>
-            {(!user.subscription || user.subscription?.plan === 'free') && (
-              <Link 
-                href="/pricing"
-                className="block w-full px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium text-center hover:opacity-90 transition"
-              >
-                Upgrade to Pro
-              </Link>
-            )}
-          </div>
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 transition">
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
+          )}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="pt-16 lg:ml-64 min-h-screen flex flex-col">
+      <main className={`pt-16 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} min-h-screen flex flex-col transition-all duration-300`}>
         <div className="flex-1 p-6 lg:p-8">
           {/* Active Build Progress Banner */}
           {activeBuilds.length > 0 && (
@@ -200,14 +224,18 @@ export default function DashboardPage() {
   );
 }
 
-function NavButton({ icon: Icon, label, active, onClick, badge }: any) {
+function NavButton({ icon: Icon, label, active, onClick, badge, collapsed }: any) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition ${active ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+    <button 
+      onClick={onClick} 
+      className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition ${active ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+      title={collapsed ? label : undefined}
+    >
       <div className="flex items-center gap-3">
         <Icon className="w-5 h-5" />
-        <span className="font-medium">{label}</span>
+        {!collapsed && <span className="font-medium">{label}</span>}
       </div>
-      {badge !== undefined && badge > 0 && <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{badge}</span>}
+      {!collapsed && badge !== undefined && badge > 0 && <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{badge}</span>}
     </button>
   );
 }
@@ -345,20 +373,41 @@ function NewBuildForm() {
 }
 
 function AppsList({ builds, loading }: any) {
-  const queryClient = useQueryClient();
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      const response = await buildAPI.download(buildId);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to download');
+        return;
+      }
+
+      toast.loading('Preparing download...', { id: 'download' });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/builds/${buildId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${appName}.apk`);
+      link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success('APK downloaded successfully!');
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('APK downloaded successfully!', { id: 'download' });
     } catch (error) {
-      toast.error('Download failed');
+      console.error('Download error:', error);
+      toast.error('Download failed. Please try again.', { id: 'download' });
     }
   };
 
@@ -415,17 +464,39 @@ function BuildHistory({ builds, loading }: any) {
 
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      const response = await buildAPI.download(buildId);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to download');
+        return;
+      }
+
+      toast.loading('Preparing download...', { id: 'download' });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/builds/${buildId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${appName}.apk`);
+      link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success('APK downloaded!');
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('APK downloaded!', { id: 'download' });
     } catch (error) {
-      toast.error('Download failed');
+      console.error('Download error:', error);
+      toast.error('Download failed. Please try again.', { id: 'download' });
     }
   };
 
@@ -566,8 +637,6 @@ function Analytics({ stats }: any) {
 }
 
 function SettingsPanel({ user }: any) {
-  const router = useRouter();
-  
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <h2 className="text-3xl font-bold text-white mb-8">Settings</h2>
