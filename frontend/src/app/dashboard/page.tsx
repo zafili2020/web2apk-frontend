@@ -110,15 +110,15 @@ export default function DashboardPage() {
       <aside className={`fixed left-0 top-16 bottom-0 ${sidebarCollapsed ? 'w-20' : 'w-64'} glass border-r border-white/10 p-6 transition-all duration-300 z-30 overflow-y-auto ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        {/* Collapse Toggle Button */}
+        {/* Collapse Toggle Button - More visible */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="hidden lg:flex absolute -right-3 top-6 w-6 h-6 rounded-full bg-purple-500 items-center justify-center text-white hover:bg-purple-600 transition"
+          className="hidden lg:flex absolute -right-4 top-6 w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg items-center justify-center text-white hover:scale-110 transition-transform z-50"
         >
-          {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
 
-        <nav className="space-y-2 mb-auto">
+        <nav className="space-y-2">
           <NavButton icon={Plus} label="New Build" active={activeTab === 'new'} onClick={() => setActiveTab('new')} collapsed={sidebarCollapsed} />
           <NavButton icon={Package} label="Apps List" active={activeTab === 'apps'} onClick={() => setActiveTab('apps')} badge={completedBuilds.length} collapsed={sidebarCollapsed} />
           <NavButton icon={BarChart3} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} collapsed={sidebarCollapsed} />
@@ -126,6 +126,9 @@ export default function DashboardPage() {
           <NavButton icon={Settings} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} collapsed={sidebarCollapsed} />
           <NavButton icon={HelpCircle} label="Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} collapsed={sidebarCollapsed} />
         </nav>
+
+        {/* Large spacing before user card */}
+        <div className="h-24"></div>
 
         <div className="absolute bottom-6 left-6 right-6">
           {!sidebarCollapsed && (
@@ -375,26 +378,13 @@ function NewBuildForm() {
 function AppsList({ builds, loading }: any) {
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login to download');
-        return;
-      }
-
       toast.loading('Preparing download...', { id: 'download' });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/builds/${buildId}/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
+      // Use the buildAPI method which handles auth automatically
+      const response = await buildAPI.download(buildId);
+      
+      // Create blob from response data
+      const blob = new Blob([response.data], { type: 'application/vnd.android.package-archive' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -405,9 +395,9 @@ function AppsList({ builds, loading }: any) {
       window.URL.revokeObjectURL(url);
       
       toast.success('APK downloaded successfully!', { id: 'download' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Download error:', error);
-      toast.error('Download failed. Please try again.', { id: 'download' });
+      toast.error(error.response?.data?.message || 'Download failed. Please try again.', { id: 'download' });
     }
   };
 
@@ -464,26 +454,13 @@ function BuildHistory({ builds, loading }: any) {
 
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login to download');
-        return;
-      }
-
       toast.loading('Preparing download...', { id: 'download' });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/builds/${buildId}/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
+      // Use the buildAPI method which handles auth automatically
+      const response = await buildAPI.download(buildId);
+      
+      // Create blob from response data
+      const blob = new Blob([response.data], { type: 'application/vnd.android.package-archive' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -494,9 +471,9 @@ function BuildHistory({ builds, loading }: any) {
       window.URL.revokeObjectURL(url);
       
       toast.success('APK downloaded!', { id: 'download' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Download error:', error);
-      toast.error('Download failed. Please try again.', { id: 'download' });
+      toast.error(error.response?.data?.message || 'Download failed. Please try again.', { id: 'download' });
     }
   };
 
