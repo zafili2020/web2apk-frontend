@@ -376,32 +376,35 @@ function NewBuildForm() {
 }
 
 function AppsList({ builds, loading }: any) {
-  const downloadAPK = async (buildId: string, appName: string) => {
+  const downloadAPK = (buildId: string, appName: string) => {
     try {
-      toast.loading('Preparing download...', { id: 'download' });
-
-      // Use the buildAPI download method which uses correct route
-      const response = await buildAPI.download(buildId);
+      // Find the build in the list (we already have it!)
+      const build = builds.find((b: any) => b.buildId === buildId);
       
-      // Create blob and download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
+      if (!build || !build.output || !build.output.apkPath) {
+        toast.error('APK file not found');
+        return;
+      }
+
+      toast.loading('Starting download...', { id: 'download' });
+
+      // Download directly from Cloudinary URL (no API call needed!)
       const link = document.createElement('a');
-      link.href = url;
+      link.href = build.output.apkPath; // This is already the Cloudinary URL!
       link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
+      link.setAttribute('target', '_blank');
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        toast.success('APK download started!', { id: 'download' });
       }, 100);
-      
-      toast.success('APK downloaded successfully!', { id: 'download' });
+
     } catch (error: any) {
       console.error('Download error:', error);
-      toast.error(error.response?.data?.message || 'Download failed. Please try again.', { id: 'download' });
+      toast.error('Download failed. Please try again.', { id: 'download' });
     }
   };
 
@@ -456,32 +459,35 @@ function BuildHistory({ builds, loading }: any) {
     },
   });
 
-  const downloadAPK = async (buildId: string, appName: string) => {
+  const downloadAPK = (buildId: string, appName: string) => {
     try {
-      toast.loading('Preparing download...', { id: 'download' });
-
-      // Use the buildAPI download method which uses correct route
-      const response = await buildAPI.download(buildId);
+      // Find the build in the list (we already have it!)
+      const build = builds.find((b: any) => b.buildId === buildId);
       
-      // Create blob and download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
+      if (!build || !build.output || !build.output.apkPath) {
+        toast.error('APK file not found');
+        return;
+      }
+
+      toast.loading('Starting download...', { id: 'download' });
+
+      // Download directly from Cloudinary URL (no API call needed!)
       const link = document.createElement('a');
-      link.href = url;
+      link.href = build.output.apkPath; // This is already the Cloudinary URL!
       link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
+      link.setAttribute('target', '_blank');
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        toast.success('APK download started!', { id: 'download' });
       }, 100);
-      
-      toast.success('APK downloaded successfully!', { id: 'download' });
+
     } catch (error: any) {
       console.error('Download error:', error);
-      toast.error(error.response?.data?.message || 'Download failed. Please try again.', { id: 'download' });
+      toast.error('Download failed. Please try again.', { id: 'download' });
     }
   };
 
