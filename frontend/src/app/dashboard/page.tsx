@@ -381,25 +381,57 @@ function AppsList({ builds, loading }: any) {
       // Find the build in the list
       const build = builds.find((b: any) => b.buildId === buildId);
       
-      if (!build || !build.output || !build.output.apkPath) {
-        toast.error('APK file not found');
+      console.log('=== DOWNLOAD DEBUG ===');
+      console.log('Build ID:', buildId);
+      console.log('Build object:', build);
+      console.log('Build output:', build?.output);
+      console.log('APK Path:', build?.output?.apkPath);
+      console.log('Build status:', build?.status);
+      
+      if (!build) {
+        console.error('Build not found in list');
+        toast.error('Build not found');
+        return;
+      }
+      
+      if (!build.output) {
+        console.error('Build has no output object');
+        toast.error('Build incomplete - no output data');
+        return;
+      }
+      
+      if (!build.output.apkPath) {
+        console.error('Build has no apkPath');
+        toast.error('APK file not found - build may have failed');
+        return;
+      }
+
+      if (build.status !== 'completed') {
+        console.warn('Build status is:', build.status);
+        toast.error(`Build status: ${build.status}. Please wait for completion.`);
         return;
       }
 
       toast.loading('Starting download...', { id: 'download' });
 
       const cloudinaryUrl = build.output.apkPath;
-      console.log('Downloading from:', cloudinaryUrl);
+      console.log('Cloudinary URL:', cloudinaryUrl);
 
       // Method 1: Try direct download with fetch
       try {
+        console.log('Attempting fetch download...');
         const response = await fetch(cloudinaryUrl);
         
+        console.log('Fetch response status:', response.status);
+        console.log('Fetch response ok:', response.ok);
+        
         if (!response.ok) {
-          throw new Error('Fetch failed');
+          throw new Error(`Fetch failed with status ${response.status}`);
         }
 
         const blob = await response.blob();
+        console.log('Blob created, size:', blob.size, 'type:', blob.type);
+        
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -409,18 +441,23 @@ function AppsList({ builds, loading }: any) {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
+        console.log('✅ Download successful via fetch');
         toast.success('APK downloaded successfully!', { id: 'download' });
       } catch (fetchError) {
-        console.warn('Fetch method failed, trying direct link:', fetchError);
+        console.warn('Fetch method failed:', fetchError);
+        console.log('Trying fallback: window.open...');
         
         // Method 2: Fallback to direct link (opens in new tab)
         window.open(cloudinaryUrl, '_blank');
+        console.log('✅ Opened in new tab');
         toast.success('Download started in new tab!', { id: 'download' });
       }
 
     } catch (error: any) {
-      console.error('Download error:', error);
-      toast.error('Download failed. Please try again.', { id: 'download' });
+      console.error('=== DOWNLOAD ERROR ===');
+      console.error('Error:', error);
+      console.error('Stack:', error.stack);
+      toast.error('Download failed. Check console for details.', { id: 'download' });
     }
   };
 
