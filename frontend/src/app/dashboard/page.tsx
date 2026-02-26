@@ -376,9 +376,9 @@ function NewBuildForm() {
 }
 
 function AppsList({ builds, loading }: any) {
-  const downloadAPK = (buildId: string, appName: string) => {
+  const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      // Find the build in the list (we already have it!)
+      // Find the build in the list
       const build = builds.find((b: any) => b.buildId === buildId);
       
       if (!build || !build.output || !build.output.apkPath) {
@@ -388,19 +388,35 @@ function AppsList({ builds, loading }: any) {
 
       toast.loading('Starting download...', { id: 'download' });
 
-      // Download directly from Cloudinary URL (no API call needed!)
-      const link = document.createElement('a');
-      link.href = build.output.apkPath; // This is already the Cloudinary URL!
-      link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
-      link.setAttribute('target', '_blank');
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      setTimeout(() => {
+      const cloudinaryUrl = build.output.apkPath;
+      console.log('Downloading from:', cloudinaryUrl);
+
+      // Method 1: Try direct download with fetch
+      try {
+        const response = await fetch(cloudinaryUrl);
+        
+        if (!response.ok) {
+          throw new Error('Fetch failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`;
+        document.body.appendChild(link);
+        link.click();
         document.body.removeChild(link);
-        toast.success('APK download started!', { id: 'download' });
-      }, 100);
+        window.URL.revokeObjectURL(url);
+
+        toast.success('APK downloaded successfully!', { id: 'download' });
+      } catch (fetchError) {
+        console.warn('Fetch method failed, trying direct link:', fetchError);
+        
+        // Method 2: Fallback to direct link (opens in new tab)
+        window.open(cloudinaryUrl, '_blank');
+        toast.success('Download started in new tab!', { id: 'download' });
+      }
 
     } catch (error: any) {
       console.error('Download error:', error);
@@ -459,9 +475,9 @@ function BuildHistory({ builds, loading }: any) {
     },
   });
 
-  const downloadAPK = (buildId: string, appName: string) => {
+  const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      // Find the build in the list (we already have it!)
+      // Find the build in the list
       const build = builds.find((b: any) => b.buildId === buildId);
       
       if (!build || !build.output || !build.output.apkPath) {
@@ -471,19 +487,35 @@ function BuildHistory({ builds, loading }: any) {
 
       toast.loading('Starting download...', { id: 'download' });
 
-      // Download directly from Cloudinary URL (no API call needed!)
-      const link = document.createElement('a');
-      link.href = build.output.apkPath; // This is already the Cloudinary URL!
-      link.setAttribute('download', `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`);
-      link.setAttribute('target', '_blank');
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      setTimeout(() => {
+      const cloudinaryUrl = build.output.apkPath;
+      console.log('Downloading from:', cloudinaryUrl);
+
+      // Method 1: Try direct download with fetch
+      try {
+        const response = await fetch(cloudinaryUrl);
+        
+        if (!response.ok) {
+          throw new Error('Fetch failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${appName.replace(/[^a-z0-9]/gi, '_')}.apk`;
+        document.body.appendChild(link);
+        link.click();
         document.body.removeChild(link);
-        toast.success('APK download started!', { id: 'download' });
-      }, 100);
+        window.URL.revokeObjectURL(url);
+
+        toast.success('APK downloaded successfully!', { id: 'download' });
+      } catch (fetchError) {
+        console.warn('Fetch method failed, trying direct link:', fetchError);
+        
+        // Method 2: Fallback to direct link (opens in new tab)
+        window.open(cloudinaryUrl, '_blank');
+        toast.success('Download started in new tab!', { id: 'download' });
+      }
 
     } catch (error: any) {
       console.error('Download error:', error);
