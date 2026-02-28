@@ -398,28 +398,35 @@ function AppsList({ builds, loading }: any) {
       }
       
       const data = await response.json();
-      const build = data.data?.build || data.build;
+      console.log('Full API response:', data);
+      console.log('Response keys:', Object.keys(data));
       
-      console.log('Fresh build data:', build);
+      // Try different possible response structures
+      const build = data.data?.build || data.build || data.data || data;
+      
+      console.log('Extracted build:', build);
+      console.log('Build keys:', Object.keys(build));
       console.log('Build output:', build?.output);
+      console.log('Build.output keys:', build?.output ? Object.keys(build.output) : 'NO OUTPUT');
       console.log('APK Path:', build?.output?.apkPath);
       console.log('Build status:', build?.status);
       
       if (!build) {
-        console.error('Build not found');
+        console.error('Build not found in response');
         toast.error('Build not found', { id: 'download' });
         return;
       }
       
-      if (!build.output) {
-        console.error('Build has no output object');
-        toast.error('Build incomplete - no output data. Try refreshing the page.', { id: 'download' });
+      // Check if build has output
+      if (!build.output || typeof build.output !== 'object') {
+        console.error('Build has no output object. Full build:', JSON.stringify(build, null, 2));
+        toast.error('Build incomplete - no output data. Database may not be updated yet. Try refreshing.', { id: 'download' });
         return;
       }
       
       if (!build.output.apkPath) {
-        console.error('Build has no apkPath');
-        toast.error('APK file not found - build may have failed', { id: 'download' });
+        console.error('Build output has no apkPath. Output:', build.output);
+        toast.error('APK path not found - build may have failed', { id: 'download' });
         return;
       }
 
