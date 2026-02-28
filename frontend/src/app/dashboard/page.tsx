@@ -378,37 +378,54 @@ function NewBuildForm() {
 function AppsList({ builds, loading }: any) {
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      // Find the build in the list
-      const build = builds.find((b: any) => b.buildId === buildId);
-      
       console.log('=== DOWNLOAD DEBUG ===');
       console.log('Build ID:', buildId);
-      console.log('Build object:', build);
+      
+      // Fetch fresh build data from API (avoid cache issues)
+      toast.loading('Fetching build data...', { id: 'download' });
+      
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      
+      const response = await fetch(`${apiUrl}/api/builds/${buildId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch build data');
+      }
+      
+      const data = await response.json();
+      const build = data.data?.build || data.build;
+      
+      console.log('Fresh build data:', build);
       console.log('Build output:', build?.output);
       console.log('APK Path:', build?.output?.apkPath);
       console.log('Build status:', build?.status);
       
       if (!build) {
-        console.error('Build not found in list');
-        toast.error('Build not found');
+        console.error('Build not found');
+        toast.error('Build not found', { id: 'download' });
         return;
       }
       
       if (!build.output) {
         console.error('Build has no output object');
-        toast.error('Build incomplete - no output data');
+        toast.error('Build incomplete - no output data. Try refreshing the page.', { id: 'download' });
         return;
       }
       
       if (!build.output.apkPath) {
         console.error('Build has no apkPath');
-        toast.error('APK file not found - build may have failed');
+        toast.error('APK file not found - build may have failed', { id: 'download' });
         return;
       }
 
       if (build.status !== 'completed') {
         console.warn('Build status is:', build.status);
-        toast.error(`Build status: ${build.status}. Please wait for completion.`);
+        toast.error(`Build status: ${build.status}. Please wait for completion.`, { id: 'download' });
         return;
       }
 
@@ -420,16 +437,16 @@ function AppsList({ builds, loading }: any) {
       // Method 1: Try direct download with fetch
       try {
         console.log('Attempting fetch download...');
-        const response = await fetch(cloudinaryUrl);
+        const downloadResponse = await fetch(cloudinaryUrl);
         
-        console.log('Fetch response status:', response.status);
-        console.log('Fetch response ok:', response.ok);
+        console.log('Fetch response status:', downloadResponse.status);
+        console.log('Fetch response ok:', downloadResponse.ok);
         
-        if (!response.ok) {
-          throw new Error(`Fetch failed with status ${response.status}`);
+        if (!downloadResponse.ok) {
+          throw new Error(`Fetch failed with status ${downloadResponse.status}`);
         }
 
-        const blob = await response.blob();
+        const blob = await downloadResponse.blob();
         console.log('Blob created, size:', blob.size, 'type:', blob.type);
         
         const url = window.URL.createObjectURL(blob);
@@ -514,11 +531,34 @@ function BuildHistory({ builds, loading }: any) {
 
   const downloadAPK = async (buildId: string, appName: string) => {
     try {
-      // Find the build in the list
-      const build = builds.find((b: any) => b.buildId === buildId);
+      console.log('=== DOWNLOAD DEBUG ===');
+      console.log('Build ID:', buildId);
+      
+      // Fetch fresh build data from API (avoid cache issues)
+      toast.loading('Fetching build data...', { id: 'download' });
+      
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      
+      const response = await fetch(`${apiUrl}/api/builds/${buildId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch build data');
+      }
+      
+      const data = await response.json();
+      const build = data.data?.build || data.build;
+      
+      console.log('Fresh build data:', build);
+      console.log('Build output:', build?.output);
+      console.log('APK Path:', build?.output?.apkPath);
       
       if (!build || !build.output || !build.output.apkPath) {
-        toast.error('APK file not found');
+        toast.error('APK file not found. Try refreshing the page.', { id: 'download' });
         return;
       }
 
@@ -529,13 +569,13 @@ function BuildHistory({ builds, loading }: any) {
 
       // Method 1: Try direct download with fetch
       try {
-        const response = await fetch(cloudinaryUrl);
+        const downloadResponse = await fetch(cloudinaryUrl);
         
-        if (!response.ok) {
+        if (!downloadResponse.ok) {
           throw new Error('Fetch failed');
         }
 
-        const blob = await response.blob();
+        const blob = await downloadResponse.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
