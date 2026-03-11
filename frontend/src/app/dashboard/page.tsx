@@ -285,6 +285,21 @@ function NewBuildForm() {
   const createBuildMutation = useMutation({
     mutationFn: (formData: FormData) => buildAPI.create(formData),
     onSuccess: () => {
+      // Track successful build creation
+          if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'build_created', {
+        app_name: response.data.build.appConfig.appName,
+        website_url: response.data.build.appConfig.websiteUrl,
+        has_custom_icon: !!response.data.build.appConfig.appIcon,
+        user_plan: 'free' // or get from user.subscription.plan
+      });
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['builds'] });
+    toast.success('Build created successfully!');
+  },
+});
+
       toast.success('Build started successfully! Check Build History for progress.');
       queryClient.invalidateQueries({ queryKey: ['builds'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
@@ -293,7 +308,6 @@ function NewBuildForm() {
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Build creation failed');
     },
-  });
 
   const onSubmit = (data: any) => {
     const formData = new FormData();
@@ -483,7 +497,20 @@ function AppsList({ builds, loading }: any) {
       console.error('Stack:', error.stack);
       toast.error('Download failed. Check console for details.', { id: 'download' });
     }
-  };
+    // Track successful download
+      if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'apk_download', {
+        build_id: buildId,
+        app_name: appName,
+        method: 'browser_download'
+      });
+    }
+    
+    toast.success('Download started!');
+  } catch (error) {
+    toast.error('Download failed');
+  }
+};
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
 
